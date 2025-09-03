@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper para mostrar logs na tela
     function log(elementId, data) {
         const logEl = document.getElementById(elementId);
-        logEl.textContent = JSON.stringify(data, null, 2); // Formata o JSON bonitinho
+        logEl.textContent = JSON.stringify(data, null, 2); 
     }
     
     // --- Lógica do Singleton ---
@@ -17,14 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Erro no Singleton:', error));
     });
 
-    // --- Lógica do Factory Method (CORRIGIDA) ---
+    // --- Lógica do Factory Method ---
     const factoryBtns = document.querySelectorAll('.factory-btn');
     factoryBtns.forEach(btn => {
-        btn.addEventListener('click', () => { // Alteração: Removido o 'event' que não era necessário aqui
+        btn.addEventListener('click', () => {
             const exportType = btn.dataset.type;
-            const originalText = btn.innerHTML;
 
-            // Feedback visual para o utilizador
+            const originalText = btn.dataset.originalText; 
+
             btn.innerHTML = 'Gerando...';
             btn.disabled = true;
 
@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return response.blob().then(blob => ({ blob, filename }));
                 })
                 .then(({ blob, filename }) => {
-                    // Cria um link temporário para o ficheiro em memória
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.style.display = 'none';
@@ -45,9 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     a.download = filename;
                     
                     document.body.appendChild(a);
-                    a.click(); // Simula o clique no link para iniciar o download
+                    a.click();
                     
-                    // Limpa o link e o URL temporário
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 })
@@ -56,8 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Não foi possível gerar o ficheiro.');
                 })
                 .finally(() => {
-                    // Restaura o botão ao seu estado original
-                    // Alteração aqui: Usamos 'btn' que é a referência correta e estável
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 });
