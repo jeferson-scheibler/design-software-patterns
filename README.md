@@ -1,41 +1,74 @@
-Demonstração de Design Patterns
-Este projeto é uma pequena aplicação web criada para demonstrar o funcionamento de três padrões de projeto (Design Patterns) de forma interativa: Singleton, Factory Method e Observer.
+# Demonstração de Design Patterns com Python e Flask
 
-A aplicação foi desenvolvida com HTML, JavaScript puro e Tailwind CSS para a estilização, contida em um único arquivo (index.html) para simplificar a implantação e o entendimento.
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-2.2%2B-black.svg)
 
-Patterns Implementados
-1. Singleton
-Objetivo: Garantir que uma classe tenha apenas uma única instância e fornecer um ponto de acesso global para ela.
+Este repositório contém uma aplicação web desenvolvida para demonstrar a implementação prática de três padrões de projeto (Design Patterns) fundamentais. A arquitetura é baseada num backend Python com o micro-framework Flask, que expõe uma API RESTful consumida por um frontend em HTML e JavaScript.
 
-Na Aplicação: A classe ConfigManager é implementada como um Singleton. Não importa quantas vezes o botão "Obter Instância" seja clicado, a mesma instância do gerenciador de configurações é retornada. Isso é útil para gerenciar estados globais, como configurações de tema, conexões de banco de dados, etc., sem desperdiçar recursos criando múltiplos objetos.
+## Padrões de Projeto Implementados
 
-2. Factory Method
-Objetivo: Definir uma interface para criar um objeto, mas permitir que as subclasses alterem o tipo de objetos que serão criados.
+A lógica de cada padrão está implementada no backend (`app.py`) e é acessível através de endpoints específicos da API.
 
-Na Aplicação: Uma NotificationFactory é responsável por criar diferentes tipos de objetos de notificação (Email, SMS, Push). O código cliente não precisa saber os detalhes de como cada notificação é instanciada. Ele apenas solicita à fábrica o tipo de notificação desejado, desacoplando o cliente das classes concretas.
+### 1. Singleton
+- **Intenção:** Garantir que uma classe tenha apenas uma única instância e fornecer um ponto de acesso global a ela.
+- **Implementação:** A classe `ConfigurationManager` em `app.py` implementa o padrão. Independentemente do número de requisições, o servidor mantém uma única instância desta classe. A rota `/singleton` demonstra que o `id()` do objeto em memória permanece o mesmo entre chamadas, confirmando a existência de uma única instância.
 
-3. Observer
-Objetivo: Definir uma dependência do tipo "um-para-muitos" entre objetos, de forma que, quando um objeto (o Subject) muda de estado, todos os seus dependentes (os Observers) são notificados e atualizados automaticamente.
+### 2. Factory Method
+- **Intenção:** Definir uma interface para criar um objeto, mas deixar as subclasses decidirem qual classe instanciar.
+- **Implementação:** A função `get_exporter(format_type)` em `app.py` atua como a Factory. Ela desacopla o código cliente das classes concretas `PDFExporter` e `CSVExporter`. O cliente simplesmente solicita um tipo de exportador (`pdf` ou `csv`) através da rota `/factory/<export_type>`, e a fábrica retorna a instância apropriada, pronta para uso.
 
-Na Aplicação: Temos uma Newsletter (o Subject) e vários Assinantes (os Observers). Quando uma nova notícia é publicada na newsletter ao clicar no botão, todos os assinantes inscritos são notificados instantaneamente e atualizam sua interface para exibir o título da nova notícia.
+### 3. Observer
+- **Intenção:** Definir uma dependência um-para-muitos entre objetos, de modo que, quando um objeto muda de estado, todos os seus dependentes são notificados e atualizados automaticamente.
+- **Implementação:** A classe `NewsAgency` (Subject) mantém uma lista de `NewsChannel` (Observers). Quando uma nova notícia é publicada através de uma requisição `POST` para a rota `/observer/publish`, o método `notify()` é invocado, atualizando o estado de todos os observers inscritos. O estado dos observers pode ser consultado via `GET` na rota `/observer/status`.
 
-Como Executar
-Clonar o repositório:
+## Arquitetura do Projeto
 
-git clone [https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git](https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git)
+A aplicação segue um modelo cliente-servidor:
 
-Abrir o arquivo index.html:
+- **Backend (Flask):**
+  - `app.py`: Contém toda a lógica de negócio, a implementação dos design patterns e a definição dos endpoints da API.
+  - `requirements.txt`: Lista as dependências Python do projeto.
 
-Navegue até a pasta do projeto e abra o arquivo index.html diretamente em qualquer navegador web (Chrome, Firefox, etc.).
+- **Frontend (Estático):**
+  - `templates/index.html`: Estrutura da página web.
+  - `static/js/main.js`: Lógica do lado do cliente que realiza as chamadas `fetch` para a API do backend e atualiza a interface do utilizador com os resultados.
 
-(Opcional) Publicar com GitHub Pages:
+## Como Executar Localmente
 
-Faça o push do código para o seu repositório no GitHub.
+Para executar o projeto no seu ambiente local, siga os passos abaixo.
 
-Vá em Settings > Pages.
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/jeferson-scheibler/design-software-patterns.git](https://github.com/jeferson-scheibler/design-software-patterns.git)
+    cd design-software-patterns
+    ```
 
-Na seção Build and deployment, selecione a branch main (ou master) e a pasta /root.
+2.  **Crie e ative um ambiente virtual:**
+    ```bash
+    # Criar o ambiente
+    python -m venv venv
 
-Salve e aguarde alguns minutos. Sua aplicação estará disponível em https://SEU-USUARIO.github.io/SEU-REPOSITORIO/.
+    # Ativar no Windows
+    .\venv\Scripts\activate
 
-Este projeto foi criado como parte de um trabalho acadêmico para demonstrar a aplicação prática de Design Patterns.
+    # Ativar no macOS/Linux
+    source venv/bin/activate
+    ```
+
+3.  **Instale as dependências:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Execute a aplicação:**
+    ```bash
+    flask run
+    ```
+
+5.  **Aceda à aplicação** no seu navegador através do endereço:
+    `http://127.0.0.1:5000`
+
+## Tecnologias Utilizadas
+
+- **Backend:** Python, Flask
+- **Frontend:** HTML5, JavaScript (ES6+), Tailwind CSS
