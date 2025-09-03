@@ -8,7 +8,7 @@ from fpdf import FPDF # Para criar o ficheiro PDF
 # --- Configuração do Flask ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-# --- 1. Padrão Singleton (Permanece igual) ---
+# --- 1. Padrão Singleton ---
 class ConfigurationManager:
     _instance = None
     _creation_time = None
@@ -31,8 +31,7 @@ def get_singleton_instance():
     })
 
 
-# --- 2. Padrão Factory Method (ATUALIZADO) ---
-# A interface continua a mesma
+# --- 2. Padrão Factory Method ---
 class Exporter(ABC):
     @abstractmethod
     def export(self, data):
@@ -45,10 +44,9 @@ class PDFExporter(Exporter):
         pdf.add_page()
         pdf.set_font("Arial", "B", 16)
         pdf.cell(40, 10, "Relatório Gerado via Factory Pattern")
-        pdf.ln(10) # Pular linha
+        pdf.ln(10)
         pdf.set_font("Arial", "", 12)
         pdf.multi_cell(0, 10, f"Este é um relatório sobre: {data}")
-        # Retorna o PDF como uma sequência de bytes
         return pdf.output(dest='S')
 
 class CSVExporter(Exporter):
@@ -64,7 +62,6 @@ class CSVExporter(Exporter):
         # Pega o conteúdo e o converte para bytes
         return output.getvalue().encode('utf-8')
 
-# A Fábrica continua a mesma
 def get_exporter(format_type):
     if format_type == 'pdf':
         return PDFExporter()
@@ -72,7 +69,7 @@ def get_exporter(format_type):
         return CSVExporter()
     raise ValueError("Formato de exportação desconhecido.")
 
-# Rota da API ATUALIZADA para enviar o ficheiro
+# Rota da API
 @app.route('/factory/<export_type>')
 def use_factory(export_type):
     try:
@@ -98,7 +95,7 @@ def use_factory(export_type):
         return jsonify({"error": str(e)}), 400
 
 
-# --- 3. Padrão Observer (Permanece igual) ---
+# --- 3. Padrão Observer ---
 class NewsAgency:
     def __init__(self): self._observers = []; self.latest_news = ""
     def subscribe(self, observer): self._observers.append(observer)

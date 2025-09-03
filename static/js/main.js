@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper para mostrar logs na tela
     function log(elementId, data) {
         const logEl = document.getElementById(elementId);
-        logEl.textContent = JSON.stringify(data, null, 2);
+        logEl.textContent = JSON.stringify(data, null, 2); // Formata o JSON bonitinho
     }
     
     // --- Lógica do Singleton ---
@@ -17,23 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Erro no Singleton:', error));
     });
 
-    // --- Lógica do Factory Method ---
+    // --- Lógica do Factory Method (CORRIGIDA) ---
     const factoryBtns = document.querySelectorAll('.factory-btn');
     factoryBtns.forEach(btn => {
-        btn.addEventListener('click', (event) => {
-            const exportType = event.currentTarget.dataset.type;
-            const originalText = event.currentTarget.innerHTML;
+        btn.addEventListener('click', () => { // Alteração: Removido o 'event' que não era necessário aqui
+            const exportType = btn.dataset.type;
+            const originalText = btn.innerHTML;
 
             // Feedback visual para o utilizador
-            event.currentTarget.innerHTML = 'Gerando...';
-            event.currentTarget.disabled = true;
+            btn.innerHTML = 'Gerando...';
+            btn.disabled = true;
 
             fetch(`/factory/${exportType}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Erro na rede ao gerar o ficheiro.');
                     }
-                    // Pega o nome do ficheiro do header da resposta, se disponível, ou cria um.
                     const filename = `relatorio.${exportType}`;
                     return response.blob().then(blob => ({ blob, filename }));
                 })
@@ -58,8 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .finally(() => {
                     // Restaura o botão ao seu estado original
-                    event.currentTarget.innerHTML = originalText;
-                    event.currentTarget.disabled = false;
+                    // Alteração aqui: Usamos 'btn' que é a referência correta e estável
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 });
         });
     });
@@ -87,18 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Envia a nova notícia para o backend publicar
         fetch('/observer/publish', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: newsTitle }),
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data.message); // Loga a confirmação no console
-            // 2. Após publicar, busca o novo status dos observers
+            console.log(data.message);
             updateObserverStatus();
             observerInput.value = '';
         })
