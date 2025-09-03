@@ -20,14 +20,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Lógica do Factory Method ---
     const factoryBtns = document.querySelectorAll('.factory-btn');
     factoryBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const exportType = btn.dataset.type;
+        btn.addEventListener('click', (event) => {
+            const exportType = event.currentTarget.dataset.type;
+            const originalText = event.currentTarget.innerHTML;
+
+            // Feedback visual para o utilizador
+            event.currentTarget.innerHTML = 'Gerando...';
+            event.currentTarget.disabled = true;
+
             fetch(`/factory/${exportType}`)
-                .then(response => response.json())
-                .then(data => {
-                    log('factory-log', data);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na rede ao gerar o ficheiro.');
+                    }
+                    // Pega o nome do ficheiro do header da resposta, se disponível, ou cria um.
+                    const filename = `relatorio.${exportType}`;
+                    return response.blob().then(blob => ({ blob, filename }));
                 })
-                .catch(error => console.error('Erro no Factory:', error));
+                .then(({ blob, filename }) => {
+                    // Cria um link temporário para o ficheiro em memória
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    
+                    document.body.appendChild(a);
+                    a.click(); // Simula o clique no link para iniciar o download
+                    
+                    // Limpa o link e o URL temporário
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Erro no Factory:', error);
+                    alert('Não foi possível gerar o ficheiro.');
+                })
+                .finally(() => {
+                    // Restaura o botão ao seu estado original
+                    event.currentTarget.innerHTML = originalText;
+                    event.currentTarget.disabled = false;
+                });
         });
     });
 
