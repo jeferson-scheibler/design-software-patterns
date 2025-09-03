@@ -3,60 +3,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper para mostrar logs na tela
     function log(elementId, data) {
         const logEl = document.getElementById(elementId);
-        logEl.textContent = JSON.stringify(data, null, 2); 
+        logEl.textContent = JSON.stringify(data, null, 2); // Formata o JSON bonitinho
     }
     
-    // --- Lógica do Singleton ---
-    const singletonBtn = document.getElementById('singleton-btn');
-    singletonBtn.addEventListener('click', () => {
-        fetch('/singleton')
-            .then(response => response.json())
-            .then(data => {
-                log('singleton-log', data);
-            })
-            .catch(error => console.error('Erro no Singleton:', error));
+    // --- Lógica do Builder ---
+    const builderBtns = document.querySelectorAll('.builder-btn');
+    builderBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const computerType = btn.dataset.type;
+            log('builder-log', { status: `A montar PC ${computerType}...` });
+            fetch(`/builder/${computerType}`)
+                .then(response => response.json())
+                .then(data => {
+                    log('builder-log', data);
+                })
+                .catch(error => console.error('Erro no Builder:', error));
+        });
     });
 
-    // --- Lógica do Factory Method ---
-    const factoryBtns = document.querySelectorAll('.factory-btn');
-    factoryBtns.forEach(btn => {
+    // --- Lógica do Prototype ---
+    const prototypeBtns = document.querySelectorAll('.prototype-btn');
+    prototypeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const exportType = btn.dataset.type;
-
-            const originalText = btn.dataset.originalText; 
-
-            btn.innerHTML = 'Gerando...';
-            btn.disabled = true;
-
-            fetch(`/factory/${exportType}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro na rede ao gerar o ficheiro.');
-                    }
-                    const filename = `relatorio.${exportType}`;
-                    return response.blob().then(blob => ({ blob, filename }));
+            const characterType = btn.dataset.type;
+            log('prototype-log', { status: `A clonar ${characterType}...` });
+            fetch(`/prototype/${characterType}`)
+                .then(response => response.json())
+                .then(data => {
+                    log('prototype-log', data);
                 })
-                .then(({ blob, filename }) => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = filename;
-                    
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                })
-                .catch(error => {
-                    console.error('Erro no Factory:', error);
-                    alert('Não foi possível gerar o ficheiro.');
-                })
-                .finally(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                });
+                .catch(error => console.error('Erro no Prototype:', error));
         });
     });
 

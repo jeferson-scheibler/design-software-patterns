@@ -22,57 +22,54 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
+            <!-- Card Padrão Builder -->
             <div class="pattern-card bg-white rounded-xl shadow-md p-6 border border-slate-200">
-                <h2 class="text-2xl font-bold text-blue-600 mb-3">1. Singleton</h2>
+                <h2 class="text-2xl font-bold text-blue-600 mb-3">1. Builder</h2>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Analogia:</strong> Pense no <strong>Gerente Geral</strong> de uma empresa. Só existe um, e todos os departamentos falam com a mesma pessoa para obter as diretrizes oficiais.
+                    <strong>Analogia:</strong> Montar um <strong>Computador</strong> peça por peça. O padrão Builder guia a construção de um objeto complexo passo a passo, separando o processo de montagem do resultado final.
                 </p>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Na prática:</strong> Clicar no botão sempre vai contatar a mesma instância do `ConfigurationManager` no backend Python. Note que o "ID da Instância" nunca muda.
+                    <strong>Na prática:</strong> Clicar nos botões aciona um "Diretor" no backend que usa o `Builder` apropriado (Gamer ou Escritório) para montar o objeto `Computer` com as peças corretas, de forma organizada.
                 </p>
                 <div class="demo-area bg-slate-100 p-4 rounded-lg">
-                    <button id="singleton-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">
-                        Acessar Configurações
-                    </button>
+                    <div class="flex space-x-2">
+                        <button data-type="gaming" class="builder-btn flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Montar PC Gamer</button>
+                        <button data-type="office" class="builder-btn flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Montar PC Escritório</button>
+                    </div>
                     <div class="mt-4 bg-slate-800 text-white p-3 rounded-md font-mono text-xs">
-                        <pre id="singleton-log" class="whitespace-pre-wrap"></pre>
+                        <pre id="builder-log" class="whitespace-pre-wrap"></pre>
                     </div>
                 </div>
             </div>
 
+            <!-- Card Padrão Prototype -->
             <div class="pattern-card bg-white rounded-xl shadow-md p-6 border border-slate-200">
-                <h2 class="text-2xl font-bold text-green-600 mb-3">2. Factory Method</h2>
+                <h2 class="text-2xl font-bold text-green-600 mb-3">2. Prototype</h2>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Analogia:</strong> Uma <strong>Montadora de Veículos</strong>. Você pede um "carro" ou uma "moto", e a fábrica te entrega o produto pronto, sem que você precise saber os detalhes da linha de montagem de cada um.
+                    <strong>Analogia:</strong> Usar uma <strong>Máquina de Clonagem</strong>. Em vez de criar um objeto complexo do zero toda vez, você cria uma cópia (clone) de um objeto "protótipo" já existente.
                 </p>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Na prática:</strong> O backend tem uma função `get_exporter`. Pedimos "pdf" ou "csv" e ela nos devolve o objeto certo, pronto para usar, sem que o nosso código precise saber como cada um foi criado.
+                    <strong>Na prática:</strong> O backend tem protótipos de personagens pré-configurados. Clicar no botão aciona o método `clone()` do protótipo escolhido, criando uma nova instância idêntica, mas independente. Note que o ID do clone é diferente do ID do protótipo.
                 </p>
                  <div class="demo-area bg-slate-100 p-4 rounded-lg">
                     <div class="flex space-x-2">
-                        <button 
-                            data-type="pdf" 
-                            data-original-text="Exportar PDF" 
-                            class="factory-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">
-                            Exportar PDF
-                        </button>
-                        <button 
-                            data-type="csv" 
-                            data-original-text="Exportar CSV" 
-                            class="factory-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">
-                            Exportar CSV
-                        </button>
+                        <button data-type="warrior" class="prototype-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">Clonar Guerreiro</button>
+                        <button data-type="archer" class="prototype-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">Clonar Arqueiro</button>
+                    </div>
+                    <div class="mt-4 bg-slate-800 text-white p-3 rounded-md font-mono text-xs">
+                        <pre id="prototype-log" class="whitespace-pre-wrap"></pre>
                     </div>
                 </div>
             </div>
 
+            <!-- Card Padrão Observer -->
             <div class="pattern-card bg-white rounded-xl shadow-md p-6 border border-slate-200">
                 <h2 class="text-2xl font-bold text-purple-600 mb-3">3. Observer</h2>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Analogia:</strong> Inscrever-se em um <strong>Canal do YouTube</strong>. Quando o criador (Subject) posta um vídeo novo, todos os inscritos (Observers) são notificados automaticamente.
+                    <strong>Analogia:</strong> Inscrever-se num <strong>Canal do YouTube</strong>. Quando o criador (Subject) posta um vídeo novo, todos os inscritos (Observers) são notificados automaticamente.
                 </p>
                 <p class="text-slate-600 mb-4 text-sm">
-                    <strong>Na prática:</strong> A `NewsAgency` é o Subject. Os canais de TV são os Observers. Quando publicamos uma notícia, a agência avisa todos os canais inscritos, que atualizam suas manchetes.
+                    <strong>Na prática:</strong> A `NewsAgency` é o Subject. Os canais de TV são os Observers. Quando publicamos uma notícia, a agência avisa todos os canais inscritos, que atualizam as suas manchetes.
                 </p>
                 <div class="demo-area bg-slate-100 p-4 rounded-lg">
                     <input type="text" id="observer-input" placeholder="Título da notícia urgente..." class="w-full p-2 border border-slate-300 rounded-md mb-2">

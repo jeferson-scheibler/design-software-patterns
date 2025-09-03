@@ -1,98 +1,122 @@
-from flask import Flask, jsonify, render_template, request, send_file
-import time
+from flask import Flask, jsonify, render_template, request
 from abc import ABC, abstractmethod
-import io # Usado para manipular dados em memória
-import csv # Para criar o ficheiro CSV
-from fpdf import FPDF # Para criar o ficheiro PDF
+import time
+import copy # Usado pelo Prototype
+import uuid # Usado pelo Prototype
 
 # --- Configuração do Flask ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-# --- 1. Padrão Singleton ---
-class ConfigurationManager:
-    _instance = None
-    _creation_time = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ConfigurationManager, cls).__new__(cls)
-            cls._instance._creation_time = time.strftime("%H:%M:%S")
-            cls._instance.settings = {"theme": "dark", "database_url": "db.example.com"}
-        return cls._instance
-    def get_settings(self): return self._instance.settings
-    def get_creation_time(self): return self._instance._creation_time
+# --- 1. Padrão Builder ---
+# Analogia: Montar um computador customizado. O Builder guia a construção
+# de um objeto complexo passo a passo, de forma organizada.
 
-@app.route('/singleton')
-def get_singleton_instance():
-    manager = ConfigurationManager()
+# O objeto complexo que estamos a construir
+class Computer:
+    def __init__(self):
+        self.cpu = None
+        self.ram = None
+        self.storage = None
+        self.gpu = None
+
+# A interface (contrato) do Builder
+class ComputerBuilder(ABC):
+    @abstractmethod
+    def set_cpu(self): pass
+    @abstractmethod
+    def set_ram(self): pass
+    @abstractmethod
+    def set_storage(self): pass
+    @abstractmethod
+    def set_gpu(self): pass
+    @abstractmethod
+    def get_computer(self): pass
+
+# Implementações concretas do Builder
+class GamingComputerBuilder(ComputerBuilder):
+    def __init__(self): self.computer = Computer()
+    def set_cpu(self): self.computer.cpu = "Intel i9"
+    def set_ram(self): self.computer.ram = 32
+    def set_storage(self): self.computer.storage = "2TB NVMe"
+    def set_gpu(self): self.computer.gpu = "NVIDIA RTX 4080"
+    def get_computer(self): return self.computer
+
+class OfficeComputerBuilder(ComputerBuilder):
+    def __init__(self): self.computer = Computer()
+    def set_cpu(self): self.computer.cpu = "Intel i5"
+    def set_ram(self): self.computer.ram = 16
+    def set_storage(self): self.computer.storage = "512GB SATA"
+    def set_gpu(self): self.computer.gpu = "Gráficos Integrados"
+    def get_computer(self): return self.computer
+
+# O Diretor que orquestra a construção
+class Director:
+    def construct(self, builder: ComputerBuilder):
+        builder.set_cpu()
+        builder.set_ram()
+        builder.set_storage()
+        builder.set_gpu()
+
+# Rota da API para o Builder
+@app.route('/builder/<computer_type>')
+def use_builder(computer_type):
+    director = Director()
+    if computer_type == 'gaming': builder = GamingComputerBuilder()
+    elif computer_type == 'office': builder = OfficeComputerBuilder()
+    else: return jsonify({"error": "Tipo de computador desconhecido"}), 400
+
+    director.construct(builder)
+    computer = builder.get_computer()
+    
     return jsonify({
-        "message": "Instância acessada com sucesso.",
-        "creation_time": manager.get_creation_time(),
-        "instance_id": id(manager)
+        "type": f"Computador para {computer_type.capitalize()}",
+        "specs": {
+            "cpu": computer.cpu, "ram_gb": computer.ram,
+            "storage": computer.storage, "gpu": computer.gpu,
+        }
     })
 
 
-# --- 2. Padrão Factory Method ---
-class Exporter(ABC):
-    @abstractmethod
-    def export(self, data):
-        pass
+# --- 2. Padrão Prototype ---
+# Analogia: Usar uma máquina de clonagem. Em vez de construir um objeto
+# complexo do zero, criamos uma cópia de um "protótipo" existente.
 
-# Implementações concretas ATUALIZADAS para gerar ficheiros reais
-class PDFExporter(Exporter):
-    def export(self, data):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 16)
-        pdf.cell(40, 10, "Relatório Gerado via Factory Pattern")
-        pdf.ln(10)
-        pdf.set_font("Arial", "", 12)
-        pdf.multi_cell(0, 10, f"Este é um relatório sobre: {data}")
-        return pdf.output(dest='S')
+# A classe que será clonada
+class Character:
+    def __init__(self, name, level, weapon, abilities):
+        self.id = uuid.uuid4().hex
+        self.name = name
+        self.level = level
+        self.weapon = weapon
+        self.abilities = abilities
 
-class CSVExporter(Exporter):
-    def export(self, data):
-        # Usamos io.StringIO para criar o CSV em memória
-        output = io.StringIO()
-        writer = csv.writer(output)
-        
-        # Escreve o cabeçalho e os dados
-        writer.writerow(["Assunto do Relatório", "Data de Geração"])
-        writer.writerow([data, time.strftime("%Y-%m-%d")])
-        
-        # Pega o conteúdo e o converte para bytes
-        return output.getvalue().encode('utf-8')
+    def clone(self):
+        # deepcopy garante uma cópia completa e independente
+        return copy.deepcopy(self)
 
-def get_exporter(format_type):
-    if format_type == 'pdf':
-        return PDFExporter()
-    if format_type == 'csv':
-        return CSVExporter()
-    raise ValueError("Formato de exportação desconhecido.")
+# Um "armazém" para os nossos protótipos
+character_prototypes = {
+    "warrior": Character("Guerreiro Protótipo", 10, "Espada Larga", ["Investida", "Golpe Poderoso"]),
+    "archer": Character("Arqueiro Protótipo", 10, "Arco Longo", ["Tiro Mirado", "Chuva de Flechas"])
+}
 
-# Rota da API
-@app.route('/factory/<export_type>')
-def use_factory(export_type):
-    try:
-        data_to_export = "Relatório de Vendas Mensais"
-        exporter = get_exporter(export_type)
-        
-        # Gera os bytes do ficheiro (PDF ou CSV)
-        file_bytes = exporter.export(data_to_export)
-        
-        # Prepara o ficheiro para ser enviado
-        buffer = io.BytesIO(file_bytes)
-        filename = f"relatorio.{export_type}"
-        mimetype = 'application/pdf' if export_type == 'pdf' else 'text/csv'
-        
-        # Usa send_file para enviar o ficheiro para o browser
-        return send_file(
-            buffer,
-            mimetype=mimetype,
-            as_attachment=True,
-            download_name=filename
-        )
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+# Rota da API para o Prototype
+@app.route('/prototype/<character_type>')
+def use_prototype(character_type):
+    prototype = character_prototypes.get(character_type)
+    if not prototype: return jsonify({"error": "Tipo de personagem desconhecido"}), 400
+    
+    new_character = prototype.clone()
+    new_character.id = uuid.uuid4().hex # Damos ao clone um novo ID único
+    
+    return jsonify({
+        "message": f"Personagem '{character_type}' clonado com sucesso!",
+        "cloned_character": {
+            "id": new_character.id, "name": new_character.name, "level": new_character.level,
+            "weapon": new_character.weapon, "abilities": new_character.abilities,
+        },
+        "prototype_id": prototype.id
+    })
 
 
 # --- 3. Padrão Observer ---
