@@ -49,7 +49,7 @@ class PDFExporter(Exporter):
         pdf.set_font("Arial", "", 12)
         pdf.multi_cell(0, 10, f"Este é um relatório sobre: {data}")
         # Retorna o PDF como uma sequência de bytes
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest='S')
 
 class CSVExporter(Exporter):
     def export(self, data):
