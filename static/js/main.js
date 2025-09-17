@@ -8,31 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funções de Comunicação com a API ---
 
-    async function fetchStateAndDraw() {
-        const response = await fetch('/state');
-        const elements = await response.json();
-        drawCanvas(elements);
-    }
-
-    async function placeElement(type, x, y) {
-        const response = await fetch('/place', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, x, y }),
-        });
-        const result = await response.json();
-        updateStatus(result.message, !result.success);
-        if (result.success) {
-            fetchStateAndDraw();
-        }
-    }
-
-    async function undoLastAction() {
-        const response = await fetch('/undo', { method: 'POST' });
-        const result = await response.json();
-        updateStatus(result.message);
-        fetchStateAndDraw();
-    }
+    const api = {
+        getState: async () => (await fetch('/state')).json(),
+        placeElement: async (type, x, y) => {
+            const response = await fetch('/place', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, x, y }),
+            });
+            return response.json();
+        },
+        undo: async () => (await fetch('/undo', { method: 'POST' })).json(),
+    };
 
     // --- Funções da Interface ---
 
@@ -41,9 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.forEach(el => {
             const div = document.createElement('div');
             div.className = 'element';
-            div.style.left = `${el.x - 24}px`; // Centraliza a imagem
-            div.style.top = `${el.y - 24}px`;
-            div.innerHTML = `<img src="${el.image}" alt="${el.name}" title="${el.name}">`;
+            // Centraliza o elemento no ponto de clique
+            div.style.left = `${el.x - el.width / 2}px`;
+            div.style.top = `${el.y - el.height / 2}px`;
+            div.style.width = `${el.width}px`;
+            div.style.height = `${el.height}px`;
+            div.innerHTML = `<img src="${el.image}" alt="${el.name}" title="${el.name} (${el.x}, ${el.y})">`;
             canvas.appendChild(div);
         });
     }
@@ -51,39 +41,59 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStatus(message, isError = false) {
         statusBar.textContent = message;
         statusBar.style.color = isError ? '#ef4444' : '#64748b';
-        setTimeout(() => statusBar.textContent = '', 3000);
+        // Limpa a mensagem após 3 segundos
+        setTimeout(() => {
+            if (statusBar.textContent === message) statusBar.textContent = '';
+        }, 3000);
     }
 
     function selectTool(type) {
         selectedElementType = type;
         toolBtns.forEach(btn => {
-            btn.classList.toggle('bg-sky-200', btn.dataset.type === type);
-            btn.classList.toggle('border-sky-500', btn.dataset.type === type);
+            btn.classList.toggle('selected', btn.dataset.type === type);
         });
         updateStatus(`Ferramenta selecionada: ${type}`);
     }
 
-    // --- Event Listeners ---
+    // --- Lógica de Eventos ---
 
-    toolBtns.forEach(btn => {
-        btn.addEventListener('click', () => selectTool(btn.dataset.type));
-    });
-
-    canvas.addEventListener('click', (e) => {
+    async function handleCanvasClick(e) {
         if (!selectedElementType) {
-            updateStatus('Selecione uma ferramenta primeiro!', true);
+            updateStatus('Por favor, selecione uma ferramenta na barra lateral!', true);
             return;
         }
         const rect = canvas.getBoundingClientRect();
         const x = Math.round(e.clientX - rect.left);
         const y = Math.round(e.clientY - rect.top);
-        placeElement(selectedElementType, x, y);
-    });
+        
+        const result = await api.placeElement(selectedElementType, x, y);
+        updateStatus(result.message, !result.success);
 
-    undoBtn.addEventListener('click', undoLastAction);
+        if (result.success) {
+            const elements = await api.getState();
+            drawCanvas(elements);
+        }
+    }
+
+    async function handleUndoClick() {
+        const result = await api.undo();
+        updateStatus(result.message);
+        const elements = await api.getState();
+        drawCanvas(elements);
+    }
 
     // --- Inicialização ---
-    fetchStateAndDraw();
-    updateStatus("Bem-vindo ao Planeador Urbano!");
+
+    toolBtns.forEach(btn => btn.addEventListener('click', () => selectTool(btn.dataset.type)));
+    canvas.addEventListener('click', handleCanvasClick);
+    undoBtn.addEventListener('click', handleUndoClick);
+
+    async function init() {
+        const elements = await api.getState();
+        drawCanvas(elements);
+        updateStatus("Bem-vindo ao Planeador Urbano! Selecione uma ferramenta e clique no mapa.");
+    }
+
+    init();
 });
 
