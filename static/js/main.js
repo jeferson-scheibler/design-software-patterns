@@ -1,78 +1,89 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('canvas');
+    const toolBtns = document.querySelectorAll('.tool-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    const statusBar = document.getElementById('status-bar');
 
-    // Helper para mostrar logs na tela
-    function log(elementId, data) {
-        const logEl = document.getElementById(elementId);
-        logEl.textContent = JSON.stringify(data, null, 2); // Formata o JSON bonitinho
-    }
-    
-    // --- Lógica do Builder ---
-    const builderBtns = document.querySelectorAll('.builder-btn');
-    builderBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const computerType = btn.dataset.type;
-            log('builder-log', { status: `A montar PC ${computerType}...` });
-            fetch(`/builder/${computerType}`)
-                .then(response => response.json())
-                .then(data => {
-                    log('builder-log', data);
-                })
-                .catch(error => console.error('Erro no Builder:', error));
-        });
-    });
+    let selectedElementType = null;
 
-    // --- Lógica do Prototype ---
-    const prototypeBtns = document.querySelectorAll('.prototype-btn');
-    prototypeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const characterType = btn.dataset.type;
-            log('prototype-log', { status: `A clonar ${characterType}...` });
-            fetch(`/prototype/${characterType}`)
-                .then(response => response.json())
-                .then(data => {
-                    log('prototype-log', data);
-                })
-                .catch(error => console.error('Erro no Prototype:', error));
-        });
-    });
+    // --- Funções de Comunicação com a API ---
 
-    // --- Lógica do Observer ---
-    const observerBtn = document.getElementById('observer-btn');
-    const observerInput = document.getElementById('observer-input');
-    const channelA_span = document.querySelector('#observer-1 span');
-    const channelB_span = document.querySelector('#observer-2 span');
-
-    // Função para atualizar a UI dos observers
-    function updateObserverStatus() {
-        fetch('/observer/status')
-            .then(response => response.json())
-            .then(data => {
-                channelA_span.textContent = data.channel_A;
-                channelB_span.textContent = data.channel_B;
-            });
+    async function fetchStateAndDraw() {
+        const response = await fetch('/state');
+        const elements = await response.json();
+        drawCanvas(elements);
     }
 
-    observerBtn.addEventListener('click', () => {
-        const newsTitle = observerInput.value.trim();
-        if (!newsTitle) {
-            alert('Por favor, digite um título para a notícia.');
-            return;
-        }
-
-        fetch('/observer/publish', {
+    async function placeElement(type, x, y) {
+        const response = await fetch('/place', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: newsTitle }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-            updateObserverStatus();
-            observerInput.value = '';
-        })
-        .catch(error => console.error('Erro no Observer:', error));
+            body: JSON.stringify({ type, x, y }),
+        });
+        const result = await response.json();
+        updateStatus(result.message, !result.success);
+        if (result.success) {
+            fetchStateAndDraw();
+        }
+    }
+
+    async function undoLastAction() {
+        const response = await fetch('/undo', { method: 'POST' });
+        const result = await response.json();
+        updateStatus(result.message);
+        fetchStateAndDraw();
+    }
+
+    // --- Funções da Interface ---
+
+    function drawCanvas(elements) {
+        canvas.innerHTML = ''; // Limpa o canvas
+        elements.forEach(el => {
+            const div = document.createElement('div');
+            div.className = 'element';
+            div.style.left = `${el.x - 24}px`; // Centraliza a imagem
+            div.style.top = `${el.y - 24}px`;
+            div.innerHTML = `<img src="${el.image}" alt="${el.name}" title="${el.name}">`;
+            canvas.appendChild(div);
+        });
+    }
+
+    function updateStatus(message, isError = false) {
+        statusBar.textContent = message;
+        statusBar.style.color = isError ? '#ef4444' : '#64748b';
+        setTimeout(() => statusBar.textContent = '', 3000);
+    }
+
+    function selectTool(type) {
+        selectedElementType = type;
+        toolBtns.forEach(btn => {
+            btn.classList.toggle('bg-sky-200', btn.dataset.type === type);
+            btn.classList.toggle('border-sky-500', btn.dataset.type === type);
+        });
+        updateStatus(`Ferramenta selecionada: ${type}`);
+    }
+
+    // --- Event Listeners ---
+
+    toolBtns.forEach(btn => {
+        btn.addEventListener('click', () => selectTool(btn.dataset.type));
     });
 
-    // Inicia o status dos observers quando a página carrega
-    updateObserverStatus();
+    canvas.addEventListener('click', (e) => {
+        if (!selectedElementType) {
+            updateStatus('Selecione uma ferramenta primeiro!', true);
+            return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.round(e.clientX - rect.left);
+        const y = Math.round(e.clientY - rect.top);
+        placeElement(selectedElementType, x, y);
+    });
+
+    undoBtn.addEventListener('click', undoLastAction);
+
+    // --- Inicialização ---
+    fetchStateAndDraw();
+    updateStatus("Bem-vindo ao Planeador Urbano!");
 });
+
