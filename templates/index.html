@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planeador Urbano - 4 Design Patterns</title>
+    <title>Planeador Urbano</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -15,40 +15,42 @@
             position: relative;
             overflow: hidden;
             cursor: crosshair;
-            background-color: #e0f2fe;
+            background-color: #f1f5f9; /* Fundo mais claro */
             background-image:
-                linear-gradient(rgba(14, 165, 233, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(14, 165, 233, 0.2) 1px, transparent 1px);
+                linear-gradient(rgba(148, 163, 184, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.3) 1px, transparent 1px);
             background-size: 20px 20px;
         }
         .element { position: absolute; user-select: none; display: flex; align-items: center; justify-content: center; }
         .element img { max-width: 100%; max-height: 100%; }
+        .road { position: absolute; transform-origin: top left; }
         .tool-btn.selected {
             background-color: #bae6fd;
             border-color: #0ea5e9;
         }
     </style>
 </head>
-<body class="bg-slate-100 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-slate-200 flex flex-col items-center justify-center min-h-screen p-4">
 
     <div class="bg-white p-6 rounded-xl shadow-lg max-w-4xl w-full">
         <header class="text-center mb-4">
-            <h1 class="text-3xl font-bold text-slate-800">Planeador Urbano de Alto Nível</h1>
-            <p class="text-slate-500">Uma demonstração de 4 padrões de projeto avançados em conjunto.</p>
+            <h1 class="text-3xl font-bold text-slate-800">Planeador Urbano Avançado</h1>
+            <p class="text-slate-500">Desenhe ruas contínuas e posicione elementos com precisão.</p>
         </header>
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="md:col-span-1 bg-slate-50 p-4 rounded-lg border">
                 <h2 class="font-bold text-lg mb-3">Ferramentas</h2>
                 <div id="toolbar" class="grid grid-cols-2 gap-2">
+                    <button data-type="road" class="tool-btn border-2 border-transparent p-2 rounded-lg hover:bg-sky-100 flex flex-col items-center">
+                        <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6m-6 0H6m6 0h6"></path></svg>
+                        <span class="text-xs mt-1">Rua</span>
+                    </button>
                     <button data-type="tree" class="tool-btn border-2 border-transparent p-2 rounded-lg hover:bg-sky-100 flex flex-col items-center">
                         <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f332.png" alt="Árvore" class="w-10 h-10"><span class="text-xs mt-1">Árvore</span>
                     </button>
                     <button data-type="building" class="tool-btn border-2 border-transparent p-2 rounded-lg hover:bg-sky-100 flex flex-col items-center">
                         <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3e2.png" alt="Prédio" class="w-10 h-10"><span class="text-xs mt-1">Prédio</span>
-                    </button>
-                    <button data-type="road" class="tool-btn border-2 border-transparent p-2 rounded-lg hover:bg-sky-100 flex flex-col items-center">
-                        <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6e4-fe0f.png" alt="Rua" class="w-10 h-10"><span class="text-xs mt-1">Rua</span>
                     </button>
                     <button data-type="water" class="tool-btn border-2 border-transparent p-2 rounded-lg hover:bg-sky-100 flex flex-col items-center">
                         <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f30a.png" alt="Água" class="w-10 h-10"><span class="text-xs mt-1">Água</span>
@@ -61,7 +63,7 @@
             </div>
             
             <div class="md:col-span-3">
-                 <h2 class="font-bold text-lg mb-3">Mapa da Cidade</h2>
+                <h2 class="font-bold text-lg mb-3">Mapa da Cidade</h2>
                 <div id="canvas" class="rounded-lg"></div>
                 <p id="status-bar" class="text-sm text-center text-slate-500 h-5 mt-2"></p>
             </div>
